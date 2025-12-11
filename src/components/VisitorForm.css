@@ -1,0 +1,434 @@
+.visitor-form-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.form-container.simple-form {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    padding: 30px;
+    max-width: 450px;
+    width: 100%;
+    margin: 20px;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 20px;
+}
+
+.form-header h1 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 24px;
+}
+
+.location-info h2 {
+    color: #667eea;
+    margin-bottom: 5px;
+}
+
+.location-info p {
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.location-address {
+    color: #888;
+    font-size: 14px;
+    font-style: italic;
+    margin-top: 5px;
+}
+
+.visitor-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-section {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    background: #fafafa;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.form-hint {
+    color: #666;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+/* Gender Selection Styles */
+.gender-selection {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.gender-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.gender-option:hover {
+    border-color: #667eea;
+    transform: translateY(-1px);
+}
+
+.gender-option input[type="radio"] {
+    margin: 0;
+    transform: scale(1.1);
+}
+
+.gender-label {
+    font-weight: 500;
+    cursor: pointer;
+    color: #333;
+}
+
+.gender-option input[type="radio"]:checked + .gender-label {
+    color: #667eea;
+    font-weight: 600;
+}
+
+.gender-option input[type="radio"]:checked {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+.gender-summary {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    text-align: center;
+    border-left: 4px solid #667eea;
+}
+
+.gender-summary small {
+    font-weight: 500;
+    color: #495057;
+}
+
+/* Form Row untuk input berdampingan */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.form-row .form-group {
+    margin-bottom: 0;
+}
+
+/* Summary Section */
+.summary-section {
+    margin: 15px 0 0 0;
+}
+
+.summary-card {
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.summary-card h4 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    opacity: 0.9;
+    text-align: center;
+}
+
+.summary-details {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    padding: 4px 0;
+}
+
+.summary-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    margin-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    flex: 1;
+    text-align: center;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn.primary {
+    background: #667eea;
+    color: white;
+}
+
+.btn.primary:hover:not(:disabled) {
+    background: #5a6fd8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn.secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn.secondary:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.form-footer {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+    color: #666;
+    font-size: 14px;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-size: 18px;
+    color: #666;
+}
+
+/* QR Badge */
+.qr-badge {
+    display: inline-block;
+    background: #28a745;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 8px;
+    font-weight: 600;
+}
+
+/* Radio Button Custom Styling */
+.gender-option input[type="radio"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.gender-option input[type="radio"]:checked {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+.gender-option input[type="radio"]:checked::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .form-container.simple-form {
+        margin: 10px;
+        padding: 20px;
+        max-width: 100%;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .gender-selection {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .btn {
+        padding: 14px 20px;
+    }
+    
+    .summary-item,
+    .summary-total {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .visitor-form-page {
+        padding: 10px;
+    }
+    
+    .form-container.simple-form {
+        padding: 15px;
+        margin: 5px;
+    }
+    
+    .form-section {
+        padding: 15px;
+    }
+    
+    .form-header h1 {
+        font-size: 20px;
+    }
+    
+    .location-info h2 {
+        font-size: 18px;
+    }
+}
+
+/* Animation untuk form */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-container.simple-form {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Focus states untuk accessibility */
+.gender-option:focus-within {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+/* Custom scrollbar untuk textarea */
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-group textarea::-webkit-scrollbar {
+    width: 6px;
+}
+
+.form-group textarea::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.form-group textarea::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.form-group textarea::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
