@@ -78,9 +78,10 @@ app.post('/api/auth/login', async (req, res) => {
             });
         }
 
-        // SIMPLE AUTHENTICATION - tanpa database
+        // HAPUS DATA DUMMY - Simple authentication
+        // Hanya validasi dasar, tanpa data dummy
         if (username === 'admin' && password === 'password') {
-            const token = 'demo-jwt-token-' + Date.now();
+            const token = 'jwt-token-' + Date.now();
             
             console.log('✅ Login successful for admin');
             
@@ -91,24 +92,8 @@ app.post('/api/auth/login', async (req, res) => {
                     id: 1,
                     username: 'admin',
                     role: 'admin',
-                    full_name: 'Administrator DISBUDPORAPAR',
-                    email: 'admin@disbudpar.go.id'
-                }
-            });
-        } else if (username === 'operator' && password === 'password') {
-            const token = 'demo-jwt-token-' + Date.now();
-            
-            console.log('✅ Login successful for operator');
-            
-            res.json({
-                success: true,
-                token: token,
-                user: {
-                    id: 2,
-                    username: 'operator',
-                    role: 'uptd_head',
-                    full_name: 'Operator UPTD',
-                    email: 'operator@disbudpar.go.id'
+                    full_name: 'Administrator',
+                    email: 'admin@example.com'
                 }
             });
         } else {
@@ -141,16 +126,16 @@ app.get('/api/auth/me', async (req, res) => {
             });
         }
 
-        // Simple token verification for demo
-        if (token.includes('demo-jwt-token')) {
+        // Simple token verification
+        if (token.includes('jwt-token')) {
             res.json({ 
                 success: true,
                 user: {
                     id: 1,
                     username: 'admin',
                     role: 'admin',
-                    full_name: 'Administrator DISBUDPORAPAR',
-                    email: 'admin@disbudpar.go.id'
+                    full_name: 'Administrator',
+                    email: 'admin@example.com'
                 }
             });
         } else {
@@ -171,53 +156,13 @@ app.get('/api/auth/me', async (req, res) => {
 
 // ===== VISITORS MANAGEMENT =====
 
-// GET /api/visitors - Get all visitors dengan pagination
+// GET /api/visitors - Get all visitors
 app.get('/api/visitors', async (req, res) => {
     try {
         const { page = 1, limit = 10, location, startDate, endDate } = req.query;
         
-        // Data dummy untuk demo
-        const demoVisitors = [
-            {
-                id: 1,
-                record_uuid: 'uuid-1',
-                location_name: 'Gallery Bungas',
-                location_code: 'GB',
-                visitor_name: 'Grup Sekolah SMA 1',
-                male_count: 5,
-                female_count: 3,
-                visitor_type: 'domestic',
-                check_in_time: new Date('2024-01-05T08:30:00Z'),
-                created_by_name: 'Operator UPTD',
-                notes: 'Rombongan studi wisata'
-            },
-            {
-                id: 2,
-                record_uuid: 'uuid-2', 
-                location_name: 'PIP',
-                location_code: 'PIP',
-                visitor_name: 'Keluarga Budi',
-                male_count: 2,
-                female_count: 2,
-                visitor_type: 'domestic',
-                check_in_time: new Date('2024-01-05T10:15:00Z'),
-                created_by_name: 'Operator UPTD',
-                notes: 'Keluarga dengan 2 anak'
-            },
-            {
-                id: 3,
-                record_uuid: 'uuid-3',
-                location_name: 'Rumah Anno',
-                location_code: 'RA',
-                visitor_name: 'Turis Jepang',
-                male_count: 1,
-                female_count: 1, 
-                visitor_type: 'international',
-                check_in_time: new Date('2024-01-04T14:20:00Z'),
-                created_by_name: 'Administrator',
-                notes: 'Turis asal Tokyo'
-            }
-        ];
+        // HAPUS DATA DUMMY - array kosong
+        const demoVisitors = [];
 
         res.json({
             success: true,
@@ -245,19 +190,26 @@ app.post('/api/visitors/manual', async (req, res) => {
         
         const { locationId, visitorName, maleCount, femaleCount, visitorType, notes } = req.body;
 
+        if (!visitorName) {
+            return res.status(400).json({
+                success: false,
+                error: 'Nama pengunjung diperlukan'
+            });
+        }
+
         // Simulasi save ke database
         const newRecord = {
             id: Date.now(),
             record_uuid: 'uuid-' + Date.now(),
-            location_name: 'Gallery Bungas', // Hardcode untuk demo
-            location_code: 'GB',
+            location_name: 'Lokasi ' + locationId,
+            location_code: 'LOC' + locationId,
             visitor_name: visitorName,
             male_count: maleCount || 0,
             female_count: femaleCount || 0,
             visitor_type: visitorType || 'domestic',
             check_in_time: new Date(),
             created_by_name: 'System',
-            notes: notes
+            notes: notes || ''
         };
 
         res.json({
@@ -280,32 +232,8 @@ app.post('/api/visitors/manual', async (req, res) => {
 // GET /api/locations - Get all locations
 app.get('/api/locations', async (req, res) => {
     try {
-        const locations = [
-            {
-                id: 1,
-                location_code: 'GB',
-                name: 'Gallery Bungas',
-                address: 'Jl. Gallery Bungas No. 123',
-                qr_code_path: null,
-                is_active: true
-            },
-            {
-                id: 2,
-                location_code: 'PIP',
-                name: 'PIP', 
-                address: 'Jl. PIP No. 456',
-                qr_code_path: null,
-                is_active: true
-            },
-            {
-                id: 3,
-                location_code: 'RA',
-                name: 'Rumah Anno',
-                address: 'Jl. Rumah Anno No. 789',
-                qr_code_path: null,
-                is_active: true
-            }
-        ];
+        // HAPUS DATA DUMMY - array kosong
+        const locations = [];
 
         res.json({
             success: true,
@@ -327,21 +255,12 @@ app.post('/api/locations/:id/generate-qr', async (req, res) => {
         const locationId = req.params.id;
         
         console.log(`🎯 Generating QR code for location ${locationId}`);
-        
-        // Get location data
-        const locations = {
-            1: { code: 'GB', name: 'Gallery Bungas' },
-            2: { code: 'PIP', name: 'PIP' },
-            3: { code: 'RA', name: 'Rumah Anno' }
+
+        // HAPUS DATA DUMMY LOKASI
+        const location = {
+            code: `LOC${locationId}`,
+            name: `Lokasi ${locationId}`
         };
-        
-        const location = locations[locationId];
-        if (!location) {
-            return res.status(404).json({
-                success: false,
-                error: 'Location not found'
-            });
-        }
 
         // QR code data
         const qrData = {
@@ -356,7 +275,7 @@ app.post('/api/locations/:id/generate-qr', async (req, res) => {
         // Generate QR code as Data URL (base64)
         const qrDataURL = await QRCode.toDataURL(JSON.stringify(qrData), {
             color: {
-                dark: '#1e3c72', // Warna biru DISBUDPORAPAR
+                dark: '#1e3c72',
                 light: '#FFFFFF'
             },
             width: 300,
@@ -369,7 +288,7 @@ app.post('/api/locations/:id/generate-qr', async (req, res) => {
         res.json({
             success: true,
             message: 'QR code berhasil digenerate',
-            qrCodeDataURL: qrDataURL, // Kirim sebagai data URL
+            qrCodeDataURL: qrDataURL,
             locationId: locationId,
             locationName: location.name,
             locationCode: location.code
@@ -389,35 +308,8 @@ app.post('/api/locations/:id/generate-qr', async (req, res) => {
 // GET /api/visitors/stats/daily - Stats harian
 app.get('/api/visitors/stats/daily', async (req, res) => {
     try {
-        const demoStats = [
-            {
-                location_code: 'GB',
-                location_name: 'Gallery Bungas',
-                total_visits: 15,
-                total_male: 8,
-                total_female: 7,
-                total_visitors: 15,
-                international_visits: 2
-            },
-            {
-                location_code: 'PIP',
-                location_name: 'PIP',
-                total_visits: 10,
-                total_male: 5,
-                total_female: 5,
-                total_visitors: 10,
-                international_visits: 1
-            },
-            {
-                location_code: 'RA',
-                location_name: 'Rumah Anno',
-                total_visits: 8,
-                total_male: 4,
-                total_female: 4,
-                total_visitors: 8,
-                international_visits: 0
-            }
-        ];
+        // HAPUS DATA DUMMY - array kosong
+        const demoStats = [];
         
         res.json({
             success: true,
@@ -438,24 +330,18 @@ app.get('/api/visitors/stats/daily', async (req, res) => {
 app.get('/api/visitors/stats/monthly', async (req, res) => {
     try {
         const currentYear = new Date().getFullYear();
+        // HAPUS DATA DUMMY - data kosong
         const demoStats = {
             year: currentYear,
-            total_visitors: 1256,
-            total_locations: 3,
-            monthly_data: [
-                { month: 'Jan', visitors: 89 },
-                { month: 'Feb', visitors: 102 },
-                { month: 'Mar', visitors: 145 },
-                { month: 'Apr', visitors: 98 },
-                { month: 'Mei', visitors: 156 },
-                { month: 'Jun', visitors: 203 },
-                { month: 'Jul', visitors: 187 },
-                { month: 'Ags', visitors: 165 },
-                { month: 'Sep', visitors: 142 },
-                { month: 'Okt', visitors: 3 },
-                { month: 'Nov', visitors: 0 },
-                { month: 'Des', visitors: 0 }
-            ]
+            total_visitors: 0,
+            total_locations: 0,
+            monthly_data: Array.from({ length: 12 }, (_, i) => {
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+                return {
+                    month: monthNames[i],
+                    visitors: 0
+                };
+            })
         };
         
         res.json({
@@ -476,24 +362,18 @@ app.get('/api/visitors/stats/monthly', async (req, res) => {
 app.get('/api/visitors/stats/yearly', async (req, res) => {
     try {
         const currentYear = new Date().getFullYear();
+        // HAPUS DATA DUMMY - data kosong
         const demoStats = {
             year: currentYear,
-            total_visitors: 1256,
-            total_locations: 3,
-            monthly_data: [
-                { month: 'Jan', visitors: 89 },
-                { month: 'Feb', visitors: 102 },
-                { month: 'Mar', visitors: 145 },
-                { month: 'Apr', visitors: 98 },
-                { month: 'Mei', visitors: 156 },
-                { month: 'Jun', visitors: 203 },
-                { month: 'Jul', visitors: 187 },
-                { month: 'Ags', visitors: 165 },
-                { month: 'Sep', visitors: 142 },
-                { month: 'Okt', visitors: 3 },
-                { month: 'Nov', visitors: 0 },
-                { month: 'Des', visitors: 0 }
-            ]
+            total_visitors: 0,
+            total_locations: 0,
+            monthly_data: Array.from({ length: 12 }, (_, i) => {
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+                return {
+                    month: monthNames[i],
+                    visitors: 0
+                };
+            })
         };
         
         res.json({
@@ -513,26 +393,20 @@ app.get('/api/visitors/stats/yearly', async (req, res) => {
 // GET /api/notifications - Get notifications
 app.get('/api/notifications', async (req, res) => {
     try {
+        // HAPUS DATA DUMMY - hanya notifikasi sistem
         const notifications = [
             {
                 id: 1,
-                title: 'Selamat datang di Sistem DISBUDPORAPAR',
-                message: 'Sistem rekapitulasi pengunjung DISBUDPORAPAR',
+                title: 'Sistem VISITOR MANAGEMENT',
+                message: 'Sistem siap digunakan. Database kosong, silakan tambah data.',
                 type: 'info',
                 date: new Date().toISOString()
             },
             {
                 id: 2,
-                title: 'Sistem siap digunakan',
-                message: 'Semua fitur sudah dapat diakses',
-                type: 'success', 
-                date: new Date().toISOString()
-            },
-            {
-                id: 3,
-                title: 'Total pengunjung bulan ini',
-                message: 'Telah tercatat 3 pengunjung bulan ini',
-                type: 'info',
+                title: 'Belum ada data',
+                message: 'Tidak ada data pengunjung yang tercatat',
+                type: 'warning',
                 date: new Date().toISOString()
             }
         ];
@@ -618,5 +492,5 @@ app.listen(PORT, () => {
     console.log(`🔐 Auth Test: http://localhost:${PORT}/api/auth/test`);
     console.log('\n📋 LOGIN CREDENTIALS:');
     console.log('   👤 Admin: username=admin, password=password');
-    console.log('   👤 Operator: username=operator, password=password');
+    console.log('   👤 Operator: Tidak tersedia - hanya admin saja');
 });
