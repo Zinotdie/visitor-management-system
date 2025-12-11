@@ -32,21 +32,62 @@ const VisitorForm = () => {
     }, [locationCode, formType]);
 
     const fetchLocationInfo = async () => {
-        const locations = {
-            'GB': { name: 'Gallery Bungas', address: 'Jl. Gallery Bungas No. 123' },
-            'PIP': { name: 'PIP', address: 'Jl. PIP No. 456' },
-            'RA': { name: 'Rumah Anno', address: 'Jl. Rumah Anno No. 789' }
-        };
-        setLocation(locations[locationCode] || { name: 'Lokasi Tidak Ditemukan', address: '' });
+        // HAPUS DATA DUMMY LOKASI
+        const locations = {};
+        
+        if (locations[locationCode]) {
+            setLocation(locations[locationCode]);
+        } else {
+            // Load from localStorage jika ada
+            try {
+                const savedLocations = localStorage.getItem('tourism_locations');
+                if (savedLocations) {
+                    const parsedLocations = JSON.parse(savedLocations);
+                    const foundLocation = parsedLocations.find(loc => loc.location_code === locationCode);
+                    if (foundLocation) {
+                        setLocation({
+                            name: foundLocation.name,
+                            address: foundLocation.address || 'Alamat tidak tersedia'
+                        });
+                    } else {
+                        setLocation({ 
+                            name: `Lokasi ${locationCode}`, 
+                            address: 'Lokasi wisata ini belum terdaftar'
+                        });
+                    }
+                } else {
+                    setLocation({ 
+                        name: `Lokasi ${locationCode}`, 
+                        address: 'Lokasi wisata ini belum terdaftar'
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading location:', error);
+                setLocation({ 
+                    name: `Lokasi ${locationCode}`, 
+                    address: 'Error loading location data'
+                });
+            }
+        }
     };
 
     const getLocationName = (code) => {
-        const locations = {
-            'GB': 'Gallery Bungas',
-            'PIP': 'PIP',
-            'RA': 'Rumah Anno'
-        };
-        return locations[code] || code;
+        // Cek di localStorage terlebih dahulu
+        try {
+            const savedLocations = localStorage.getItem('tourism_locations');
+            if (savedLocations) {
+                const parsedLocations = JSON.parse(savedLocations);
+                const foundLocation = parsedLocations.find(loc => loc.location_code === code);
+                if (foundLocation) {
+                    return foundLocation.name;
+                }
+            }
+        } catch (error) {
+            console.error('Error getting location name:', error);
+        }
+        
+        // HAPUS DATA DUMMY - return code jika tidak ditemukan
+        return code;
     };
 
     // Handle perubahan gender untuk form individu
@@ -89,17 +130,24 @@ const VisitorForm = () => {
                 return;
             }
 
+            // Dapatkan nama lokasi yang benar
+            const locationName = getLocationName(locationCode);
+
             // Siapkan data untuk disimpan
             const submitData = {
                 id: Date.now(), // ID unik berdasarkan timestamp
                 location_code: locationCode,
-                location_name: getLocationName(locationCode),
+                location_name: locationName,
                 visitor_name: formData.visitor_name.trim() || 
                             (formType === 'individual' ? 
                              `Pengunjung ${formData.gender === 'male' ? 'Laki-laki' : 'Perempuan'}` : 
                              'Rombongan'),
-                male_count: formData.male_count,
-                female_count: formData.female_count,
+                male_count: formType === 'individual' ? 
+                           (formData.gender === 'male' ? 1 : 0) : 
+                           formData.male_count,
+                female_count: formType === 'individual' ? 
+                             (formData.gender === 'female' ? 1 : 0) : 
+                             formData.female_count,
                 visitor_type: formType === 'foreign' ? 'international' : 'domestic',
                 check_in_time: new Date().toISOString(),
                 notes: formType === 'individual' ? 

@@ -1,159 +1,107 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useRefresh } from "../contexts/RefreshContext";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
+  const { refreshTriggers } = useRefresh();
   const navigate = useNavigate();
+  
   const [yearlyStats, setYearlyStats] = useState(null);
   const [monthlyStats, setMonthlyStats] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
   
-  // State untuk kalender
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dailyDetails, setDailyDetails] = useState([]);
-  const [calendarView, setCalendarView] = useState("month"); // 'month' atau 'week'
 
+  // EFFECT 1: Load data pertama kali
   useEffect(() => {
     fetchDashboardData();
-  }, [currentDate]); // Reload data ketika bulan/tahun berubah
+  }, []);
+
+  // EFFECT 2: Load data ketika bulan/tahun berubah
+  useEffect(() => {
+    fetchDashboardData();
+  }, [currentDate]);
+
+  // EFFECT 3: Load data ketika refresh dipicu oleh context
+  useEffect(() => {
+    if (refreshTriggers.dashboard > 0) {
+      console.log('🔄 Dashboard refresh triggered by context');
+      fetchDashboardData();
+    }
+  }, [refreshTriggers.dashboard]);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      console.log('📊 Fetching dashboard data...');
       
-      // Get visitor data from localStorage
-      const STORAGE_KEY = 'visitor_management_data';
-      const savedVisitors = localStorage.getItem(STORAGE_KEY);
-      const visitors = savedVisitors ? JSON.parse(savedVisitors) : [];
-      
-      // Get locations data
-      const savedLocations = localStorage.getItem('tourism_locations');
-      const locations = savedLocations ? JSON.parse(savedLocations) : [];
-      
+      // HAPUS DATA DUMMY - Mulai dari sini
       const currentYear = currentDate.getFullYear();
       const currentMonth = currentDate.getMonth();
 
-      // Calculate monthly visitors untuk bulan yang dipilih
-      const monthlyVisitors = visitors.filter(visitor => {
-        const visitDate = new Date(visitor.check_in_time);
-        return visitDate.getFullYear() === currentYear && 
-               visitDate.getMonth() === currentMonth;
-      });
-
-      // Calculate yearly visitors
-      const yearlyVisitors = visitors.filter(visitor => {
-        const visitDate = new Date(visitor.check_in_time);
-        return visitDate.getFullYear() === currentYear;
-      });
-
-      // Generate monthly data for chart
+      // Data kosong untuk bulanan
       const monthlyData = Array.from({ length: 12 }, (_, i) => {
-        const monthVisitors = visitors.filter(visitor => {
-          const visitDate = new Date(visitor.check_in_time);
-          return visitDate.getFullYear() === currentYear && 
-                 visitDate.getMonth() === i;
-        });
-        
-        const totalVisitors = monthVisitors.reduce((sum, visitor) => 
-          sum + (visitor.male_count || 0) + (visitor.female_count || 0), 0
-        );
-
         return {
           month: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", 
                  "Jul", "Ags", "Sep", "Okt", "Nov", "Des"][i],
-          visitors: totalVisitors,
+          visitors: 0, // HAPUS DATA DUMMY
           monthIndex: i
         };
       });
 
-      // Generate daily data untuk kalender bulan berjalan
       const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
       const dailyData = Array.from({ length: daysInMonth }, (_, i) => {
         const day = i + 1;
-        const dayVisitors = visitors.filter(visitor => {
-          const visitDate = new Date(visitor.check_in_time);
-          return visitDate.getFullYear() === currentYear && 
-                 visitDate.getMonth() === currentMonth &&
-                 visitDate.getDate() === day;
-        });
-        
-        const totalVisitors = dayVisitors.reduce((sum, visitor) => 
-          sum + (visitor.male_count || 0) + (visitor.female_count || 0), 0
-        );
-
-        const locationsBreakdown = {};
-        const typesBreakdown = {
-          domestic: 0,
-          international: 0
-        };
-
-        dayVisitors.forEach(visitor => {
-          // Breakdown per lokasi
-          const location = visitor.location_code;
-          if (!locationsBreakdown[location]) {
-            locationsBreakdown[location] = 0;
-          }
-          locationsBreakdown[location] += (visitor.male_count || 0) + (visitor.female_count || 0);
-          
-          // Breakdown per tipe
-          const type = visitor.visitor_type || 'domestic';
-          typesBreakdown[type] += (visitor.male_count || 0) + (visitor.female_count || 0);
-        });
-
         return {
           day: day,
-          visitors: totalVisitors,
-          records: dayVisitors.length,
-          locationsBreakdown: locationsBreakdown,
-          typesBreakdown: typesBreakdown,
+          visitors: 0, // HAPUS DATA DUMMY
+          records: 0, // HAPUS DATA DUMMY
+          locationsBreakdown: {}, // HAPUS DATA DUMMY
+          typesBreakdown: {
+            domestic: 0, // HAPUS DATA DUMMY
+            international: 0 // HAPUS DATA DUMMY
+          },
           date: new Date(currentYear, currentMonth, day),
-          visitorsList: dayVisitors
+          visitorsList: [] // HAPUS DATA DUMMY
         };
       });
 
+      // HAPUS STATISTIK DUMMY
       const demoYearlyStats = {
         year: currentYear,
-        total_visitors: yearlyVisitors.reduce((sum, visitor) => 
-          sum + (visitor.male_count || 0) + (visitor.female_count || 0), 0
-        ),
-        total_locations: locations.length,
+        total_visitors: 0, // HAPUS DATA DUMMY
+        total_locations: 0, // HAPUS DATA DUMMY
         monthly_data: monthlyData,
       };
 
       const demoMonthlyStats = {
         month: currentMonth + 1,
         year: currentYear,
-        total_visitors: monthlyVisitors.reduce((sum, visitor) => 
-          sum + (visitor.male_count || 0) + (visitor.female_count || 0), 0
-        ),
+        total_visitors: 0, // HAPUS DATA DUMMY
         daily_data: dailyData,
       };
 
+      // HAPUS NOTIFIKASI DUMMY, hanya sisakan notifikasi sistem
       const demoNotifications = [
         {
           id: 1,
-          title: "Selamat Datang di Sistem DISBUDPORAPAR",
-          message: "Sistem rekapitulasi pengunjung DISBUDPORAPAR Kota Banjarmasin",
+          title: "Sistem VISITOR MANAGEMENT",
+          message: "Database kosong. Silakan tambah data pengunjung.",
           type: "info",
           date: new Date().toISOString(),
         },
         {
           id: 2,
-          title: "Kalender Kunjungan Aktif",
-          message: "Klik tanggal pada kalender untuk melihat detail pengunjung",
-          type: "success",
-          date: new Date().toISOString(),
-        },
-        {
-          id: 3,
-          title: `Statistik ${currentYear}`,
-          message: `Total ${demoYearlyStats.total_visitors} pengunjung tercatat tahun ini`,
-          type: "info",
+          title: "Belum Ada Data Pengunjung",
+          message: "Klik 'Data Pengunjung' untuk menambahkan kunjungan pertama",
+          type: "warning",
           date: new Date().toISOString(),
         },
       ];
@@ -174,7 +122,6 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  // ==================== KALENDER FUNCTIONS ====================
   const navigateMonth = (direction) => {
     const newDate = new Date(currentDate);
     if (direction === 'prev') {
@@ -244,11 +191,11 @@ const Dashboard = () => {
             day: day,
             currentMonth: true,
             date: new Date(year, month, day),
-            hasVisitor: dayData?.visitors > 0,
+            hasVisitor: false, // SELALU FALSE KARENA TIDAK ADA DATA DUMMY
             isToday: today.getDate() === day && today.getMonth() === month && today.getFullYear() === year,
             isSelected: selectedDate && selectedDate.getDate() === day && selectedDate.getMonth() === month && selectedDate.getFullYear() === year,
-            visitorCount: dayData?.visitors || 0,
-            recordsCount: dayData?.records || 0
+            visitorCount: 0, // HAPUS DATA DUMMY
+            recordsCount: 0 // HAPUS DATA DUMMY
           });
           day++;
         }
@@ -260,15 +207,10 @@ const Dashboard = () => {
   };
 
   const getLocationName = (code) => {
-    const locations = {
-      'GB': 'Gallery Bungas',
-      'PIP': 'PIP',
-      'RA': 'Rumah Anno'
-    };
-    return locations[code] || code;
+    // HAPUS DATA DUMMY LOKASI
+    return code;
   };
 
-  // ==================== RENDER COMPONENTS ====================
   const renderCalendar = () => {
     const calendar = generateCalendar();
     const selectedDayDetails = getSelectedDayDetails();
@@ -323,7 +265,7 @@ const Dashboard = () => {
                     key={dayIndex}
                     className={`calendar-day ${
                       day.currentMonth ? "current-month" : "other-month"
-                    } ${day.hasVisitor ? "has-visitor" : ""} ${
+                    } ${false ? "has-visitor" : ""} ${ // SELALU FALSE
                       day.isToday ? "today" : ""
                     } ${day.isSelected ? "selected" : ""}`}
                     onClick={() => handleDateSelect(day)}
@@ -335,18 +277,8 @@ const Dashboard = () => {
                     
                     {day.currentMonth && (
                       <div className="day-content">
-                        {day.hasVisitor ? (
-                          <div className="visitor-info">
-                            <div className="visitor-count-badge">
-                              {day.visitorCount} 👥
-                            </div>
-                            <div className="records-count">
-                              {day.recordsCount} data
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="no-visitor">Tidak ada pengunjung</div>
-                        )}
+                        {/* SELALU TIDAK ADA PENGUNJUNG */}
+                        <div className="no-visitor">Tidak ada pengunjung</div>
                       </div>
                     )}
                   </div>
@@ -356,57 +288,11 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Selected Day Details */}
-        {selectedDayDetails && selectedDayDetails.visitors > 0 && (
-          <div className="selected-day-details">
-            <h4>📊 Detail Kunjungan {selectedDate.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</h4>
-            <div className="day-stats">
-              <div className="day-stat">
-                <span className="stat-label">Total Pengunjung</span>
-                <span className="stat-value">{selectedDayDetails.visitors}</span>
-              </div>
-              <div className="day-stat">
-                <span className="stat-label">Total Records</span>
-                <span className="stat-value">{selectedDayDetails.records}</span>
-              </div>
-            </div>
-            
-            {Object.keys(selectedDayDetails.locationsBreakdown).length > 0 && (
-              <div className="location-breakdown">
-                <h5>📍 Per Lokasi</h5>
-                <div className="breakdown-list">
-                  {Object.entries(selectedDayDetails.locationsBreakdown).map(([location, count]) => (
-                    <div key={location} className="breakdown-item">
-                      <span>{getLocationName(location)}</span>
-                      <span>{count} pengunjung</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="type-breakdown">
-              <h5>🌍 Per Tipe Pengunjung</h5>
-              <div className="breakdown-list">
-                <div className="breakdown-item">
-                  <span>Domestik</span>
-                  <span>{selectedDayDetails.typesBreakdown.domestic} pengunjung</span>
-                </div>
-                <div className="breakdown-item">
-                  <span>Mancanegara</span>
-                  <span>{selectedDayDetails.typesBreakdown.international} pengunjung</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {selectedDayDetails && selectedDayDetails.visitors === 0 && (
-          <div className="selected-day-details empty">
-            <h4>📅 {selectedDate.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</h4>
-            <p>Tidak ada kunjungan tercatat pada hari ini</p>
-          </div>
-        )}
+        {/* HAPUS DETAIL HARI KARENA TIDAK ADA DATA */}
+        <div className="selected-day-details empty">
+          <h4>📅 {selectedDate.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</h4>
+          <p>Belum ada data kunjungan</p>
+        </div>
 
         <div className="calendar-legend">
           <div className="legend-item">
@@ -414,8 +300,8 @@ const Dashboard = () => {
             <span>Hari Ini</span>
           </div>
           <div className="legend-item">
-            <div className="legend-color visitor"></div>
-            <span>Ada Pengunjung</span>
+            <div className="legend-color visitor" style={{opacity: 0.3}}></div>
+            <span style={{opacity: 0.7}}>Ada Pengunjung</span>
           </div>
           <div className="legend-item">
             <div className="legend-color selected"></div>
@@ -450,7 +336,6 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-disbudporapar">
-      {/* Header */}
       <header className="dashboard-header">
         <div className="header-content">
           <div className="header-brand">
@@ -483,7 +368,6 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Navigation */}
       <nav className="dashboard-nav">
         <div className="nav-container">
           <button
@@ -511,7 +395,6 @@ const Dashboard = () => {
       </nav>
 
       <div className="dashboard-content">
-        {/* Welcome Section */}
         <div className="welcome-section">
           <div className="welcome-content">
             <div className="welcome-text">
@@ -533,29 +416,28 @@ const Dashboard = () => {
               </div>
               <div className="welcome-stats">
                 <span className="stat-item">
-                  <strong>{yearlyStats?.total_visitors || 0}</strong> Pengunjung Tahun Ini
+                  <strong>0</strong> Pengunjung Tahun Ini {/* HAPUS DATA DUMMY */}
                 </span>
                 <span className="stat-item">
-                  <strong>{yearlyStats?.total_locations || 0}</strong> Lokasi Wisata
+                  <strong>0</strong> Lokasi Wisata {/* HAPUS DATA DUMMY */}
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Statistics Cards */}
         <div className="stats-grid">
           <div className="stat-card primary">
             <div className="stat-card-content">
               <div className="stat-icon">👥</div>
               <div className="stat-info">
                 <h3>Total Pengunjung</h3>
-                <div className="stat-value">{yearlyStats?.total_visitors || 0}</div>
+                <div className="stat-value">0</div> {/* HAPUS DATA DUMMY */}
                 <div className="stat-label">Tahun {currentDate.getFullYear()}</div>
               </div>
             </div>
-            <div className="stat-trend positive">
-              <span>📈 Tren Naik</span>
+            <div className="stat-trend">
+              <span>📊 Menunggu Data</span> {/* HAPUS DATA DUMMY */}
             </div>
           </div>
 
@@ -564,12 +446,12 @@ const Dashboard = () => {
               <div className="stat-icon">📅</div>
               <div className="stat-info">
                 <h3>Bulan Ini</h3>
-                <div className="stat-value">{monthlyStats?.total_visitors || 0}</div>
+                <div className="stat-value">0</div> {/* HAPUS DATA DUMMY */}
                 <div className="stat-label">{monthNames[currentDate.getMonth()]}</div>
               </div>
             </div>
             <div className="stat-trend">
-              <span>🔄 Update Harian</span>
+              <span>🔄 Belum Ada Data</span> {/* HAPUS DATA DUMMY */}
             </div>
           </div>
 
@@ -578,12 +460,12 @@ const Dashboard = () => {
               <div className="stat-icon">🏛️</div>
               <div className="stat-info">
                 <h3>Lokasi Wisata</h3>
-                <div className="stat-value">{yearlyStats?.total_locations || 0}</div>
+                <div className="stat-value">0</div> {/* HAPUS DATA DUMMY */}
                 <div className="stat-label">Aktif</div>
               </div>
             </div>
             <div className="stat-trend">
-              <span>✅ Semua Berjalan</span>
+              <span>📝 Tambah Lokasi</span> {/* HAPUS DATA DUMMY */}
             </div>
           </div>
 
@@ -592,24 +474,20 @@ const Dashboard = () => {
               <div className="stat-icon">📊</div>
               <div className="stat-info">
                 <h3>Rata-rata Harian</h3>
-                <div className="stat-value">
-                  {Math.round((monthlyStats?.total_visitors || 0) / Math.max(1, new Date().getDate()))}
-                </div>
+                <div className="stat-value">0</div> {/* HAPUS DATA DUMMY */}
                 <div className="stat-label">Pengunjung/hari</div>
               </div>
             </div>
             <div className="stat-trend">
-              <span>🎯 Target Tercapai</span>
+              <span>🎯 Data Kosong</span> {/* HAPUS DATA DUMMY */}
             </div>
           </div>
         </div>
 
         <div className="dashboard-main-content">
-          {/* Left Column */}
           <div className="content-left">
             {renderCalendar()}
 
-            {/* Monthly Chart Section */}
             <div className="chart-section">
               <div className="section-header">
                 <h3 className="section-title">📈 Statistik Tahunan {currentDate.getFullYear()}</h3>
@@ -620,14 +498,14 @@ const Dashboard = () => {
                     <div key={index} className="chart-bar-container">
                       <div className="chart-bar-wrapper">
                         <div 
-                          className={`chart-bar ${monthData.visitors > 0 ? 'active' : ''} ${
+                          className={`chart-bar ${false ? 'active' : ''} ${ // SELALU FALSE
                             index === currentDate.getMonth() ? 'current-month' : ''
                           }`}
                           style={{ 
-                            height: `${Math.max(10, (monthData.visitors / Math.max(1, yearlyStats.total_visitors)) * 100)}%` 
+                            height: `10%` // TINGGI MINIMAL KARENA TIDAK ADA DATA
                           }}
                         >
-                          <div className="bar-value">{monthData.visitors}</div>
+                          <div className="bar-value">0</div> {/* HAPUS DATA DUMMY */}
                         </div>
                       </div>
                       <div className="chart-label">{monthData.month}</div>
@@ -638,19 +516,18 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Right Column */}
           <div className="content-right">
-            {/* Notifications */}
             <div className="notifications-section">
               <div className="section-header">
-                <h3 className="section-title">🔔 Notifikasi Terbaru</h3>
+                <h3 className="section-title">🔔 Notifikasi Sistem</h3>
                 <span className="notification-badge">{notifications.length}</span>
               </div>
               <div className="notifications-list">
                 {notifications.map((notification) => (
                   <div key={notification.id} className={`notification-item ${notification.type}`}>
                     <div className="notification-icon">
-                      {notification.type === 'success' ? '✅' : 'ℹ️'}
+                      {notification.type === 'success' ? '✅' : 
+                       notification.type === 'warning' ? '⚠️' : 'ℹ️'}
                     </div>
                     <div className="notification-content">
                       <h4 className="notification-title">{notification.title}</h4>
@@ -664,7 +541,6 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Quick Actions */}
             <div className="quick-actions-section">
               <div className="section-header">
                 <h3 className="section-title">⚡ Aksi Cepat</h3>
@@ -675,7 +551,7 @@ const Dashboard = () => {
                   onClick={() => navigate("/visitors")}
                 >
                   <span className="action-icon">👥</span>
-                  <span className="action-text">Data Pengunjung</span>
+                  <span className="action-text">Tambah Data Pengunjung</span>
                   <span className="action-arrow">→</span>
                 </button>
                 <button 
@@ -683,10 +559,10 @@ const Dashboard = () => {
                   onClick={() => navigate("/locations")}
                 >
                   <span className="action-icon">🏛️</span>
-                  <span className="action-text">Kelola Lokasi</span>
+                  <span className="action-text">Tambah Lokasi Wisata</span>
                   <span className="action-arrow">→</span>
                 </button>
-                <button className="quick-action-btn accent">
+                <button className="quick-action-btn accent" disabled>
                   <span className="action-icon">📊</span>
                   <span className="action-text">Buat Laporan</span>
                   <span className="action-arrow">→</span>
@@ -694,7 +570,6 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* System Status */}
             <div className="system-status-section">
               <div className="section-header">
                 <h3 className="section-title">🟢 Status Sistem</h3>
@@ -702,22 +577,22 @@ const Dashboard = () => {
               <div className="status-list">
                 <div className="status-item online">
                   <div className="status-indicator"></div>
-                  <span className="status-text">Database</span>
-                  <span className="status-value">Online</span>
+                  <span className="status-text">Dashboard</span>
+                  <span className="status-value">Siap</span>
                 </div>
-                <div className="status-item online">
+                <div className="status-item offline">
                   <div className="status-indicator"></div>
-                  <span className="status-text">Kalender</span>
-                  <span className="status-value">Aktif</span>
+                  <span className="status-text">Data Pengunjung</span>
+                  <span className="status-value">Kosong</span>
                 </div>
-                <div className="status-item online">
+                <div className="status-item offline">
                   <div className="status-indicator"></div>
                   <span className="status-text">Statistik</span>
-                  <span className="status-value">Real-time</span>
+                  <span className="status-value">Menunggu Data</span>
                 </div>
                 <div className="status-item online">
                   <div className="status-indicator"></div>
-                  <span className="status-text">Backup</span>
+                  <span className="status-text">Sistem</span>
                   <span className="status-value">Aktif</span>
                 </div>
               </div>
@@ -726,20 +601,19 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="dashboard-footer">
         <div className="footer-content">
           <div className="footer-info">
             <div className="footer-logo">🏛️</div>
             <div className="footer-text">
               <strong>DISBUDPORAPAR Kota Banjarmasin</strong>
-              <span>Sistem Rekapitulasi Pengunjung Wisata</span>
+              <span>Sistem Rekapitulasi Pengunjung Wisata • Database Kosong</span>
             </div>
           </div>
           <div className="footer-meta">
             <span className="footer-user">{user?.full_name} • Administrator</span>
             <span className="footer-version">v2.1.0</span>
-            <span className="footer-update">Terakhir update: {new Date().toLocaleTimeString('id-ID')}</span>
+            <span className="footer-update">Belum ada data pengunjung</span>
           </div>
         </div>
       </footer>

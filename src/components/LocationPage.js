@@ -19,27 +19,35 @@ const LocationPage = () => {
       if (savedLocations) {
         const locations = JSON.parse(savedLocations);
         const currentLocation = locations.find(loc => loc.location_code === code);
-        setLocation(currentLocation || { 
-          name: 'Lokasi Tidak Ditemukan', 
-          address: 'Silakan hubungi administrator' 
-        });
+        if (currentLocation) {
+          setLocation(currentLocation);
+        } else {
+          // Jika lokasi tidak ditemukan
+          setLocation({ 
+            name: `Lokasi ${code}`, 
+            address: 'Lokasi wisata ini belum terdaftar dalam sistem',
+            is_active: false
+          });
+        }
       } else {
-        // Default locations
-        const defaultLocations = {
-          'GB': { name: 'Gallery Bungas', address: 'Jl. Gallery Bungas No. 123' },
-          'PIP': { name: 'PIP', address: 'Jl. PIP No. 456' },
-          'RA': { name: 'Rumah Anno', address: 'Jl. Rumah Anno No. 789' }
-        };
-        setLocation(defaultLocations[code] || { 
-          name: 'Lokasi Tidak Ditemukan', 
-          address: 'Silakan hubungi administrator' 
-        });
+        // HAPUS DATA DUMMY - Array kosong
+        const defaultLocations = {};
+        if (defaultLocations[code]) {
+          setLocation(defaultLocations[code]);
+        } else {
+          setLocation({ 
+            name: `Lokasi ${code}`, 
+            address: 'Lokasi wisata ini belum terdaftar dalam sistem',
+            is_active: false
+          });
+        }
       }
     } catch (error) {
       console.error('Error fetching location:', error);
       setLocation({ 
         name: 'Error', 
-        address: 'Terjadi kesalahan saat memuat data lokasi' 
+        address: 'Terjadi kesalahan saat memuat data lokasi',
+        is_active: false
       });
     } finally {
       setLoading(false);
@@ -95,6 +103,11 @@ const LocationPage = () => {
               <span className="icon">📍</span>
               {location.address}
             </p>
+            {!location.is_active && location.is_active !== undefined && (
+              <div className="location-status inactive">
+                ⚠️ Lokasi ini belum aktif. Silakan hubungi administrator.
+              </div>
+            )}
           </div>
         </div>
       </div>

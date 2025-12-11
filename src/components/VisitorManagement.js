@@ -70,7 +70,7 @@ const VisitorManagement = () => {
                 setVisitors(validData);
                 console.log('✅ Valid data:', validData.length, 'items');
             } else {
-                // TIDAK ADA DATA DEMO - Mulai dengan array kosong
+                // HAPUS DATA DEMO - Mulai dengan array kosong
                 console.log('📭 No data found, starting with empty database');
                 setVisitors([]);
             }
@@ -256,12 +256,36 @@ const VisitorManagement = () => {
 
     // ==================== UTILITIES ====================
     const getLocationName = (code) => {
-        const locations = {
-            'GB': 'Gallery Bungas',
-            'PIP': 'PIP',
-            'RA': 'Rumah Anno'
-        };
-        return locations[code] || code;
+        // HAPUS DATA DUMMY - Cek dari localStorage terlebih dahulu
+        try {
+            const savedLocations = localStorage.getItem('tourism_locations');
+            if (savedLocations) {
+                const parsedLocations = JSON.parse(savedLocations);
+                const foundLocation = parsedLocations.find(loc => loc.location_code === code);
+                if (foundLocation) {
+                    return foundLocation.name;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading location name:', error);
+        }
+        
+        // Jika tidak ditemukan, return kode lokasi
+        return code;
+    };
+
+    // Fungsi untuk mendapatkan daftar lokasi dari localStorage
+    const getAvailableLocations = () => {
+        try {
+            const savedLocations = localStorage.getItem('tourism_locations');
+            if (savedLocations) {
+                const parsedLocations = JSON.parse(savedLocations);
+                return parsedLocations.filter(loc => loc.is_active !== false);
+            }
+        } catch (error) {
+            console.error('Error loading locations:', error);
+        }
+        return [];
     };
 
     const calculateTotalVisitors = (visitorsList) => {
@@ -497,28 +521,41 @@ const VisitorManagement = () => {
             'Laki-laki',
             'Perempuan',
             'Domestik',
-            'Mancanegara',
-            'Gallery Bungas',
-            'PIP',
-            'Rumah Anno'
+            'Mancanegara'
         ];
+
+        // Ambil semua lokasi yang ada
+        const allLocations = new Set();
+        monthlyReport.forEach(month => {
+            Object.keys(month.locations).forEach(locationCode => {
+                allLocations.add(locationCode);
+            });
+        });
+
+        // Tambahkan header untuk setiap lokasi
+        const locationHeaders = Array.from(allLocations).map(code => getLocationName(code));
+        const allHeaders = [...headers, ...locationHeaders];
         
         const csvData = monthlyReport.map(month => {
-            return [
+            const baseData = [
                 month.monthName,
                 month.totalRecords,
                 month.totalVisitors,
                 month.totalMale,
                 month.totalFemale,
                 month.types.domestic,
-                month.types.international,
-                month.locations.GB?.total || 0,
-                month.locations.PIP?.total || 0,
-                month.locations.RA?.total || 0
+                month.types.international
             ];
+
+            // Tambahkan data untuk setiap lokasi
+            const locationData = Array.from(allLocations).map(code => 
+                month.locations[code]?.total || 0
+            );
+
+            return [...baseData, ...locationData];
         });
 
-        const csvContent = [headers, ...csvData]
+        const csvContent = [allHeaders, ...csvData]
             .map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
             .join('\n');
 
@@ -553,6 +590,7 @@ const VisitorManagement = () => {
         const totalStats = getTotalStatistics();
         const availableYears = getAvailableYears();
         const availableMonths = getAvailableMonths(monthlyFilter.year);
+        const availableLocations = getAvailableLocations();
         
         // Nama bulan dalam bahasa Indonesia
         const monthNames = {
@@ -750,257 +788,264 @@ const VisitorManagement = () => {
         );
     };
 
-    // ... (renderDataTab dan bagian lainnya tetap sama seperti sebelumnya)
-    const renderDataTab = () => (
-        <>
-            <div className="page-actions">
-                <button onClick={() => setShowForm(true)} className="btn primary">
-                    + Tambah Data Manual
-                </button>
-                <button onClick={exportToCSV} className="btn secondary" disabled={visitors.length === 0}>
-                    📥 Export CSV
-                </button>
-                <button onClick={clearFilters} className="btn outline">
-                    🗑️ Hapus Filter
-                </button>
-                <button onClick={clearAllData} className="btn danger" disabled={visitors.length === 0}>
-                    🗑️ Hapus Semua Data
-                </button>
-                <button onClick={refreshData} className="btn outline">
-                    🔄 Refresh Data
-                </button>
-            </div>
-
-            {/* Data Info */}
-            <div className="data-info">
-                <span>💾 Database Real • </span>
-                <span>Total: {visitors.length} records • </span>
-                <span>
-                    Sumber: {visitors.filter(v => v.source === 'qr_form').length} QR, 
-                    {visitors.filter(v => !v.source).length} Manual
-                </span>
-            </div>
-
-            {/* Filter Section */}
-            <div className="filter-section">
-                <h3>Filter Data</h3>
-                <div className="filter-grid">
-                    <div className="form-group">
-                        <label>Lokasi</label>
-                        <select
-                            value={filter.location}
-                            onChange={(e) => setFilter({...filter, location: e.target.value})}
-                        >
-                            <option value="">Semua Lokasi</option>
-                            <option value="GB">Gallery Bungas</option>
-                            <option value="PIP">PIP</option>
-                            <option value="RA">Rumah Anno</option>
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label>Tanggal Mulai</label>
-                        <input
-                            type="date"
-                            value={filter.dateFrom}
-                            onChange={(e) => setFilter({...filter, dateFrom: e.target.value})}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Tanggal Akhir</label>
-                        <input
-                            type="date"
-                            value={filter.dateTo}
-                            onChange={(e) => setFilter({...filter, dateTo: e.target.value})}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Tipe Pengunjung</label>
-                        <select
-                            value={filter.type}
-                            onChange={(e) => setFilter({...filter, type: e.target.value})}
-                        >
-                            <option value="">Semua Tipe</option>
-                            <option value="domestic">Domestik</option>
-                            <option value="international">Mancanegara</option>
-                        </select>
-                    </div>
+    const renderDataTab = () => {
+        const availableLocations = getAvailableLocations();
+        
+        return (
+            <>
+                <div className="page-actions">
+                    <button onClick={() => setShowForm(true)} className="btn primary">
+                        + Tambah Data Manual
+                    </button>
+                    <button onClick={exportToCSV} className="btn secondary" disabled={visitors.length === 0}>
+                        📥 Export CSV
+                    </button>
+                    <button onClick={clearFilters} className="btn outline">
+                        🗑️ Hapus Filter
+                    </button>
+                    <button onClick={clearAllData} className="btn danger" disabled={visitors.length === 0}>
+                        🗑️ Hapus Semua Data
+                    </button>
+                    <button onClick={refreshData} className="btn outline">
+                        🔄 Refresh Data
+                    </button>
                 </div>
-                
-                {(filter.location || filter.dateFrom || filter.dateTo || filter.type) && (
-                    <div className="filter-info">
-                        <span>Filter aktif: </span>
-                        {filter.location && <span className="filter-tag">Lokasi: {getLocationName(filter.location)}</span>}
-                        {filter.dateFrom && <span className="filter-tag">Dari: {filter.dateFrom}</span>}
-                        {filter.dateTo && <span className="filter-tag">Sampai: {filter.dateTo}</span>}
-                        {filter.type && <span className="filter-tag">Tipe: {filter.type === 'international' ? 'Mancanegara' : 'Domestik'}</span>}
-                        <span className="filter-count">
-                            ({filteredVisitors.length} data ditemukan)
-                        </span>
-                    </div>
-                )}
-            </div>
 
-            {/* Statistics */}
-            <div className="visitor-stats">
-                <div className="stat-card primary">
-                    <div className="stat-icon">👥</div>
-                    <div className="stat-info">
-                        <h3>Total Pengunjung</h3>
-                        <div className="stat-value">{totalVisitors}</div>
-                        <div className="stat-label">
-                            {totalRecords} catatan
+                {/* Data Info */}
+                <div className="data-info">
+                    <span>💾 Database Real • </span>
+                    <span>Total: {visitors.length} records • </span>
+                    <span>
+                        Sumber: {visitors.filter(v => v.source === 'qr_form').length} QR, 
+                        {visitors.filter(v => !v.source).length} Manual
+                    </span>
+                </div>
+
+                {/* Filter Section */}
+                <div className="filter-section">
+                    <h3>Filter Data</h3>
+                    <div className="filter-grid">
+                        <div className="form-group">
+                            <label>Lokasi</label>
+                            <select
+                                value={filter.location}
+                                onChange={(e) => setFilter({...filter, location: e.target.value})}
+                            >
+                                <option value="">Semua Lokasi</option>
+                                {availableLocations.map(loc => (
+                                    <option key={loc.location_code} value={loc.location_code}>
+                                        {loc.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Tanggal Mulai</label>
+                            <input
+                                type="date"
+                                value={filter.dateFrom}
+                                onChange={(e) => setFilter({...filter, dateFrom: e.target.value})}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Tanggal Akhir</label>
+                            <input
+                                type="date"
+                                value={filter.dateTo}
+                                onChange={(e) => setFilter({...filter, dateTo: e.target.value})}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Tipe Pengunjung</label>
+                            <select
+                                value={filter.type}
+                                onChange={(e) => setFilter({...filter, type: e.target.value})}
+                            >
+                                <option value="">Semua Tipe</option>
+                                <option value="domestic">Domestik</option>
+                                <option value="international">Mancanegara</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    {(filter.location || filter.dateFrom || filter.dateTo || filter.type) && (
+                        <div className="filter-info">
+                            <span>Filter aktif: </span>
+                            {filter.location && <span className="filter-tag">Lokasi: {getLocationName(filter.location)}</span>}
+                            {filter.dateFrom && <span className="filter-tag">Dari: {filter.dateFrom}</span>}
+                            {filter.dateTo && <span className="filter-tag">Sampai: {filter.dateTo}</span>}
+                            {filter.type && <span className="filter-tag">Tipe: {filter.type === 'international' ? 'Mancanegara' : 'Domestik'}</span>}
+                            <span className="filter-count">
+                                ({filteredVisitors.length} data ditemukan)
+                            </span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Statistics */}
+                <div className="visitor-stats">
+                    <div className="stat-card primary">
+                        <div className="stat-icon">👥</div>
+                        <div className="stat-info">
+                            <h3>Total Pengunjung</h3>
+                            <div className="stat-value">{totalVisitors}</div>
+                            <div className="stat-label">
+                                {totalRecords} catatan
+                            </div>
+                        </div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-icon">👤</div>
+                        <div className="stat-info">
+                            <h3>Individu</h3>
+                            <div className="stat-value">{individualCount}</div>
+                            <div className="stat-label">Pengunjung</div>
+                        </div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-icon">👥</div>
+                        <div className="stat-info">
+                            <h3>Grup</h3>
+                            <div className="stat-value">{groupCount}</div>
+                            <div className="stat-label">Rombongan</div>
+                        </div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-icon">🌍</div>
+                        <div className="stat-info">
+                            <h3>Mancanegara</h3>
+                            <div className="stat-value">{foreignCount}</div>
+                            <div className="stat-label">Pengunjung</div>
                         </div>
                     </div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-icon">👤</div>
-                    <div className="stat-info">
-                        <h3>Individu</h3>
-                        <div className="stat-value">{individualCount}</div>
-                        <div className="stat-label">Pengunjung</div>
-                    </div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-icon">👥</div>
-                    <div className="stat-info">
-                        <h3>Grup</h3>
-                        <div className="stat-value">{groupCount}</div>
-                        <div className="stat-label">Rombongan</div>
-                    </div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-icon">🌍</div>
-                    <div className="stat-info">
-                        <h3>Mancanegara</h3>
-                        <div className="stat-value">{foreignCount}</div>
-                        <div className="stat-label">Pengunjung</div>
-                    </div>
-                </div>
-            </div>
 
-            {/* Visitors Table */}
-            <div className="visitors-table-container">
-                <div className="table-header">
-                    <h3>Data Pengunjung ({visitors.length} total records)</h3>
-                    <div className="table-summary">
-                        Menampilkan {filteredVisitors.length} data
+                {/* Visitors Table */}
+                <div className="visitors-table-container">
+                    <div className="table-header">
+                        <h3>Data Pengunjung ({visitors.length} total records)</h3>
+                        <div className="table-summary">
+                            Menampilkan {filteredVisitors.length} data
+                        </div>
                     </div>
+                    
+                    {filteredVisitors.length > 0 ? (
+                        <table className="visitors-table">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal/Waktu</th>
+                                    <th>Lokasi</th>
+                                    <th>Nama Pengunjung</th>
+                                    <th>Laki-laki</th>
+                                    <th>Perempuan</th>
+                                    <th>Total</th>
+                                    <th>Tipe</th>
+                                    <th>Catatan</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredVisitors.map(visitor => {
+                                    const totalPerRecord = (visitor.male_count || 0) + (visitor.female_count || 0);
+                                    const isIndividual = totalPerRecord === 1;
+                                    const isForeign = visitor.visitor_type === 'international';
+                                    
+                                    return (
+                                        <tr key={visitor.id}>
+                                            <td>
+                                                <div className="date-time">
+                                                    <div className="date">{new Date(visitor.check_in_time).toLocaleDateString('id-ID')}</div>
+                                                    <div className="time">{new Date(visitor.check_in_time).toLocaleTimeString('id-ID', { 
+                                                        hour: '2-digit', 
+                                                        minute: '2-digit' 
+                                                    })}</div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="location-cell">
+                                                    <strong>{getLocationName(visitor.location_code)}</strong>
+                                                    <div className="location-code">({visitor.location_code})</div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <strong>{visitor.visitor_name || 'Tidak ada nama'}</strong>
+                                                {visitor.source === 'qr_form' && (
+                                                    <div className="qr-badge">QR</div>
+                                                )}
+                                            </td>
+                                            <td className="count-cell">
+                                                <span className={`count ${visitor.male_count > 0 ? 'has-value' : ''}`}>
+                                                    {visitor.male_count || 0}
+                                                </span>
+                                            </td>
+                                            <td className="count-cell">
+                                                <span className={`count ${visitor.female_count > 0 ? 'has-value' : ''}`}>
+                                                    {visitor.female_count || 0}
+                                                </span>
+                                            </td>
+                                            <td className="total-cell">
+                                                <strong className="total-count">{totalPerRecord}</strong>
+                                            </td>
+                                            <td>
+                                                <span className={`badge ${isForeign ? 'badge-foreign' : 'badge-domestic'} ${isIndividual ? 'badge-individual' : ''}`}>
+                                                    {isForeign ? '🌍 Mancanegara' : isIndividual ? '👤 Individu' : '👥 Grup'}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div className="notes-cell">
+                                                    {visitor.notes || '-'}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="action-buttons">
+                                                    <button 
+                                                        className="btn-action edit"
+                                                        title="Edit data"
+                                                        onClick={() => handleEdit(visitor)}
+                                                    >
+                                                        ✏️
+                                                    </button>
+                                                    <button 
+                                                        className="btn-action delete"
+                                                        title="Hapus data"
+                                                        onClick={() => deleteVisitor(visitor.id)}
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <div className="empty-state">
+                            <div className="empty-icon">📭</div>
+                            <p>{visitors.length === 0 ? 'Database kosong' : 'Tidak ada data yang sesuai filter'}</p>
+                            <p className="empty-subtitle">
+                                {visitors.length === 0 
+                                    ? 'Mulai dengan menambahkan data manual atau scan QR code' 
+                                    : 'Coba ubah filter pencarian Anda'}
+                            </p>
+                            {visitors.length === 0 && (
+                                <button 
+                                    className="btn primary"
+                                    onClick={() => setShowForm(true)}
+                                >
+                                    + Tambah Data Pertama
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
-                
-                {filteredVisitors.length > 0 ? (
-                    <table className="visitors-table">
-                        <thead>
-                            <tr>
-                                <th>Tanggal/Waktu</th>
-                                <th>Lokasi</th>
-                                <th>Nama Pengunjung</th>
-                                <th>Laki-laki</th>
-                                <th>Perempuan</th>
-                                <th>Total</th>
-                                <th>Tipe</th>
-                                <th>Catatan</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredVisitors.map(visitor => {
-                                const totalPerRecord = (visitor.male_count || 0) + (visitor.female_count || 0);
-                                const isIndividual = totalPerRecord === 1;
-                                const isForeign = visitor.visitor_type === 'international';
-                                
-                                return (
-                                    <tr key={visitor.id}>
-                                        <td>
-                                            <div className="date-time">
-                                                <div className="date">{new Date(visitor.check_in_time).toLocaleDateString('id-ID')}</div>
-                                                <div className="time">{new Date(visitor.check_in_time).toLocaleTimeString('id-ID', { 
-                                                    hour: '2-digit', 
-                                                    minute: '2-digit' 
-                                                })}</div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="location-cell">
-                                                <strong>{getLocationName(visitor.location_code)}</strong>
-                                                <div className="location-code">({visitor.location_code})</div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <strong>{visitor.visitor_name || 'Tidak ada nama'}</strong>
-                                            {visitor.source === 'qr_form' && (
-                                                <div className="qr-badge">QR</div>
-                                            )}
-                                        </td>
-                                        <td className="count-cell">
-                                            <span className={`count ${visitor.male_count > 0 ? 'has-value' : ''}`}>
-                                                {visitor.male_count || 0}
-                                            </span>
-                                        </td>
-                                        <td className="count-cell">
-                                            <span className={`count ${visitor.female_count > 0 ? 'has-value' : ''}`}>
-                                                {visitor.female_count || 0}
-                                            </span>
-                                        </td>
-                                        <td className="total-cell">
-                                            <strong className="total-count">{totalPerRecord}</strong>
-                                        </td>
-                                        <td>
-                                            <span className={`badge ${isForeign ? 'badge-foreign' : 'badge-domestic'} ${isIndividual ? 'badge-individual' : ''}`}>
-                                                {isForeign ? '🌍 Mancanegara' : isIndividual ? '👤 Individu' : '👥 Grup'}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className="notes-cell">
-                                                {visitor.notes || '-'}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="action-buttons">
-                                                <button 
-                                                    className="btn-action edit"
-                                                    title="Edit data"
-                                                    onClick={() => handleEdit(visitor)}
-                                                >
-                                                    ✏️
-                                                </button>
-                                                <button 
-                                                    className="btn-action delete"
-                                                    title="Hapus data"
-                                                    onClick={() => deleteVisitor(visitor.id)}
-                                                >
-                                                    🗑️
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                ) : (
-                    <div className="empty-state">
-                        <div className="empty-icon">📭</div>
-                        <p>{visitors.length === 0 ? 'Database kosong' : 'Tidak ada data yang sesuai filter'}</p>
-                        <p className="empty-subtitle">
-                            {visitors.length === 0 
-                                ? 'Mulai dengan menambahkan data manual atau scan QR code' 
-                                : 'Coba ubah filter pencarian Anda'}
-                        </p>
-                        {visitors.length === 0 && (
-                            <button 
-                                className="btn primary"
-                                onClick={() => setShowForm(true)}
-                            >
-                                + Tambah Data Pertama
-                            </button>
-                        )}
-                    </div>
-                )}
-            </div>
-        </>
-    );
+            </>
+        );
+    };
 
     // ==================== MAIN RENDER ====================
+    const availableLocations = getAvailableLocations();
+
     return (
         <div className="visitor-management">
             <header className="page-header">
@@ -1063,9 +1108,11 @@ const VisitorManagement = () => {
                                     required
                                 >
                                     <option value="">Pilih Lokasi</option>
-                                    <option value="GB">GB - Gallery Bungas</option>
-                                    <option value="PIP">PIP - PIP</option>
-                                    <option value="RA">RA - Rumah Anno</option>
+                                    {availableLocations.map(loc => (
+                                        <option key={loc.location_code} value={loc.location_code}>
+                                            {loc.location_code} - {loc.name}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
